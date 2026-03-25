@@ -11,13 +11,15 @@ export const getAllUsers = asyncHandler(async (req, res) => {
 
     const stats = await User.aggregate([
         {
+            $match: { role: { $ne: 'admin' } }
+        },
+        {
             $group: {
                 _id: null,
                 total: { $sum: 1 },
                 farmers: { $sum: { $cond: [{ $eq: ['$role', 'farmer'] }, 1, 0] } },
                 buyers: { $sum: { $cond: [{ $eq: ['$role', 'buyer'] }, 1, 0] } },
                 logistics: { $sum: { $cond: [{ $eq: ['$role', 'logistics'] }, 1, 0] } },
-                admins: { $sum: { $cond: [{ $eq: ['$role', 'admin'] }, 1, 0] } },
                 verified: { $sum: { $cond: [{ $eq: ['$isVerified', true] }, 1, 0] } },
                 emailVerified: { $sum: { $cond: [{ $eq: ['$emailVerified', true] }, 1, 0] } },
                 aadhaarVerified: { $sum: { $cond: [{ $eq: ['$aadhaarVerified', true] }, 1, 0] } }
@@ -29,6 +31,7 @@ export const getAllUsers = asyncHandler(async (req, res) => {
     today.setHours(0, 0, 0, 0);
     
     const newUsersToday = await User.countDocuments({
+        role: { $ne: 'admin' },
         createdAt: { $gte: today }
     });
 
@@ -40,7 +43,6 @@ export const getAllUsers = asyncHandler(async (req, res) => {
             farmers: 0,
             buyers: 0,
             logistics: 0,
-            admins: 0,
             verified: 0,
             emailVerified: 0,
             aadhaarVerified: 0

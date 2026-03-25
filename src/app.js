@@ -8,6 +8,7 @@ import { connectDB } from "./db/index.js";
 import authRoutes from "./routes/auth.routes.js";
 import otpRoutes from "./routes/otp.routes.js";
 import profileRoutes from "./routes/profile.routes.js";
+import adminRoutes from "./routes/admin.routes.js";
 import ApiError from "./utils/ApiError.js";
 
 dotenv.config();
@@ -34,6 +35,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/otp", otpRoutes);
 app.use("/api/v1/profile", profileRoutes);
+app.use("/api/v1/admin", adminRoutes);
 
 app.use((err, req, res, next) => {
     if (err instanceof ApiError) {
