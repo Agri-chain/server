@@ -1,0 +1,36 @@
+{
+  "name": "dual-auth-backend",
+  "version": "1.0.0",
+  "description": "Dual authentication system with role-based access control",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "cloudinary": "^2.9.0",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "fast-two-sms": "^3.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.0.3",
+    "multer": "^2.1.1",
+    "nodemailer": "^6.9.7",
+    "nodemon": "^3.0.2",
+    "twilio": "^5.13.0"
+  },
+  "keywords": [
+    "authentication",
+    "jwt",
+    "express",
+    "mongodb",
+    "dual-auth",
+    "role-based"
+  ],
+  "author": "Backend Engineer",
+  "license": "MIT"
+}
