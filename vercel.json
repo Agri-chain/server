@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "name": "agrchain-server",
+  "name": "smartkissann-server",
   "builds": [
     {
       "src": "src/server.js",
@@ -15,7 +15,6 @@
   ],
   "env": {
     "NODE_ENV": "production",
-    "PORT": "8080",
-    "CLIENT_URL": "https://smartkissann.vercel.app"
+    "CLIENT_URL": "https://smartkissan.vercel.app"
   }
 }
