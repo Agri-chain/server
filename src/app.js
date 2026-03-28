@@ -39,9 +39,32 @@ if (process.env.MONGODB_URI) {
     });
 }
 
+// CORS configuration
+const allowedOrigins = [
+    process.env.CLIENT_URL,
+    'https://smartkissan.vercel.app',
+    'https://smartkissann.vercel.app',
+    'http://localhost:5174',
+    'http://localhost:5173'
+].filter(Boolean);
+
+console.log('CORS allowed origins:', allowedOrigins);
+
 app.use(cors({
-    origin: [process.env.CLIENT_URL, "http://localhost:5174", "http://localhost:5173"].filter(Boolean),
-    credentials: true
+    origin: function(origin, callback) {
+        // Allow requests with no origin (mobile apps, curl, etc)
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.some(allowed => origin.includes(allowed))) {
+            callback(null, true);
+        } else {
+            console.log('CORS blocked origin:', origin);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
 app.use(express.json({ limit: '32kb' }));
