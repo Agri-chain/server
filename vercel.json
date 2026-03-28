@@ -16,6 +16,6 @@
   "env": {
     "NODE_ENV": "production",
     "PORT": "8080",
-    "CLIENT_URL": "https://agrchain-client.vercel.app"
+    "CLIENT_URL": "https://smartkissann.vercel.app"
   }
 }
