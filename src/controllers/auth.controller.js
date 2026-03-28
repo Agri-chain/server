@@ -77,50 +77,69 @@ export const registerUser = asyncHandler(async (req, res) => {
 });
 
 export const loginUser = asyncHandler(async (req, res) => {
-    const { email, password } = req.body;
+    try {
+        const { email, password } = req.body;
+        console.log('🔑 Login attempt:', email);
 
-    if (!email || !password) {
-        throw new ApiError(400, "Email and password are required");
+        if (!email || !password) {
+            throw new ApiError(400, "Email and password are required");
+        }
+
+        const user = await User.findOne({ email }).select('+password');
+        console.log('👤 User found:', user ? 'YES' : 'NO');
+        
+        if (!user) {
+            throw new ApiError(401, "Invalid credentials");
+        }
+
+        console.log('🔐 Checking password...');
+        const isPasswordValid = await user.isPasswordCorrect(password);
+        console.log('🔐 Password valid:', isPasswordValid);
+        
+        if (!isPasswordValid) {
+            throw new ApiError(401, "Invalid credentials");
+        }
+
+        if (user.isBanned) {
+            throw new ApiError(403, "Account is banned");
+        }
+
+        console.log('🎫 Generating tokens...');
+        const accessToken = user.generateAccessToken();
+        const refreshToken = user.generateRefreshToken();
+        console.log('✅ Tokens generated');
+
+        user.refreshToken = refreshToken;
+        await user.save();
+
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: false,
+            secure: false,
+            sameSite: 'lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000
+        });
+
+        res.status(200).json(new ApiResponse(200, {
+            user: {
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                provider: user.provider,
+                isVerified: user.isVerified,
+                phoneVerified: user.phoneVerified,
+                emailVerified: user.emailVerified,
+                aadhaarVerified: user.aadhaarVerified,
+                isProfileComplete: user.isProfileComplete()
+            },
+            accessToken,
+            refreshToken
+        }, "Login successful"));
+    } catch (error) {
+        console.error('❌ Login error:', error.message);
+        console.error('Stack:', error.stack);
+        throw error;
     }
-
-    const user = await User.findOne({ email }).select('+password');
-    if (!user || !await user.isPasswordCorrect(password)) {
-        throw new ApiError(401, "Invalid credentials");
-    }
-
-    if (user.isBanned) {
-        throw new ApiError(403, "Account is banned");
-    }
-
-    const accessToken = user.generateAccessToken();
-    const refreshToken = user.generateRefreshToken();
-
-    user.refreshToken = refreshToken;
-    await user.save();
-
-    res.cookie('refreshToken', refreshToken, {
-        httpOnly: false,
-        secure: false,
-        sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000
-    });
-
-    res.status(200).json(new ApiResponse(200, {
-        user: {
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
-            provider: user.provider,
-            isVerified: user.isVerified,
-            phoneVerified: user.phoneVerified,
-            emailVerified: user.emailVerified,
-            aadhaarVerified: user.aadhaarVerified,
-            isProfileComplete: user.isProfileComplete()
-        },
-        accessToken,
-        refreshToken
-    }, "Login successful"));
 });
 
 export const checkGoogleUserExists = asyncHandler(async (req, res) => {
