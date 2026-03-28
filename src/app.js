@@ -23,6 +23,16 @@ app.get('/health', (req, res) => {
     });
 });
 
+// Simple test endpoint - no DB
+app.get('/api/test', (req, res) => {
+    res.json({ message: 'API is working', time: new Date().toISOString() });
+});
+
+// Test auth endpoint - no DB
+app.get('/api/v1/auth/test', (req, res) => {
+    res.json({ message: 'Auth route is working', time: new Date().toISOString() });
+});
+
 // Check critical env vars
 const missingEnv = [];
 if (!process.env.MONGODB_URI) missingEnv.push('MONGODB_URI');
