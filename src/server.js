@@ -6,9 +6,14 @@ dotenv.config();
 
 connectDB();
 
-const PORT = process.env.PORT || 8000;
+// For Vercel serverless - export the app
+export default app;
 
-app.listen(PORT, () => {
-    console.log(`🚀 Server running on  http://localhost:${PORT}`);
-    console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-});
+// For local development
+if (process.env.NODE_ENV !== 'production') {
+    const PORT = process.env.PORT || 8000;
+    app.listen(PORT, () => {
+        console.log(`🚀 Server running on http://localhost:${PORT}`);
+        console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+    });
+}

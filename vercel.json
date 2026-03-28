@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "name": "agrchain-server",
+  "builds": [
+    {
+      "src": "src/server.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "src/server.js"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production",
+    "PORT": "8080",
+    "CLIENT_URL": "https://agrchain-client.vercel.app"
+  }
+}
