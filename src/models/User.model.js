@@ -145,6 +145,10 @@ userSchema.methods.isPasswordCorrect = async function(password) {
 };
 
 userSchema.methods.generateAccessToken = function() {
+    const secret = process.env.ACCESS_TOKEN_SECRET || process.env.JWT_SECRET;
+    if (!secret) {
+        throw new Error('ACCESS_TOKEN_SECRET or JWT_SECRET not configured');
+    }
     const payload = {
         _id: this._id,
         role: this.role,
@@ -152,17 +156,21 @@ userSchema.methods.generateAccessToken = function() {
         isVerified: this.isVerified
     };
     
-    return jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, {
+    return jwt.sign(payload, secret, {
         expiresIn: process.env.ACCESS_TOKEN_EXPIRY || "15m"
     });
 };
 
 userSchema.methods.generateRefreshToken = function() {
+    const secret = process.env.REFRESH_TOKEN_SECRET;
+    if (!secret) {
+        throw new Error('REFRESH_TOKEN_SECRET not configured');
+    }
     const payload = {
         _id: this._id
     };
     
-    return jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, {
+    return jwt.sign(payload, secret, {
         expiresIn: process.env.REFRESH_TOKEN_EXPIRY || "7d"
     });
 };
