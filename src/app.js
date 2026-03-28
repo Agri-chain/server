@@ -82,10 +82,13 @@ app.use(express.urlencoded({ extended: true, limit: '32kb' }));
 app.use(cookieParser());
 
 // Routes
+console.log('Mounting auth routes...', typeof authRoutes);
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/otp", otpRoutes);
 app.use("/api/v1/profile", profileRoutes);
 app.use("/api/v1/admin", adminRoutes);
+
+console.log('All routes mounted successfully');
 
 // 404 handler
 app.use((req, res) => {
