@@ -4,16 +4,10 @@ import app from "./app.js";
 
 dotenv.config();
 
-connectDB();
+// Connect to DB (non-blocking for serverless)
+connectDB().catch(err => {
+    console.error('DB init error:', err.message);
+});
 
-// For Vercel serverless - export the app
+// Export for Vercel
 export default app;
-
-// For local development
-if (process.env.NODE_ENV !== 'production') {
-    const PORT = process.env.PORT || 8000;
-    app.listen(PORT, () => {
-        console.log(`🚀 Server running on http://localhost:${PORT}`);
-        console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
-    });
-}
