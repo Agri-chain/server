@@ -1,9 +1,7 @@
+import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import dotenv from "dotenv";
-import path from "path";
-import { fileURLToPath } from "url";
 import { connectDB } from "./db/index.js";
 import authRoutes from "./routes/auth.routes.js";
 import otpRoutes from "./routes/otp.routes.js";
@@ -13,23 +11,33 @@ import ApiError from "./utils/ApiError.js";
 
 dotenv.config();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
 const app = express();
 
+// Health check FIRST (always works)
+app.get('/health', (req, res) => {
+    res.json({ 
+        status: 'ok', 
+        env: process.env.NODE_ENV,
+        mongo: process.env.MONGODB_URI ? 'configured' : 'missing',
+        timestamp: new Date().toISOString() 
+    });
+});
+
 // Check critical env vars
-if (!process.env.MONGODB_URI) {
-    console.error('❌ MONGODB_URI not set');
-}
-if (!process.env.JWT_SECRET) {
-    console.error('❌ JWT_SECRET not set');
+const missingEnv = [];
+if (!process.env.MONGODB_URI) missingEnv.push('MONGODB_URI');
+if (!process.env.JWT_SECRET) missingEnv.push('JWT_SECRET');
+
+if (missingEnv.length > 0) {
+    console.error('❌ Missing env vars:', missingEnv);
 }
 
-// Connect to DB without top-level await
-connectDB().catch(err => {
-    console.error('⚠️ DB connection failed on startup:', err.message);
-});
+// Connect to DB (non-blocking)
+if (process.env.MONGODB_URI) {
+    connectDB().catch(err => {
+        console.error('DB error:', err.message);
+    });
+}
 
 app.use(cors({
     origin: [process.env.CLIENT_URL, "http://localhost:5174", "http://localhost:5173"].filter(Boolean),
@@ -40,14 +48,7 @@ app.use(express.json({ limit: '32kb' }));
 app.use(express.urlencoded({ extended: true, limit: '32kb' }));
 app.use(cookieParser());
 
-// Health check endpoint (for Vercel)
-app.get('/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-// Serve static files from uploads directory
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
-
+// Routes
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/otp", otpRoutes);
 app.use("/api/v1/profile", profileRoutes);
