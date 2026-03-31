@@ -1,6 +1,6 @@
 import express from "express";
 import { generateEmailOTP, verifyEmailOTP, generateAadhaarOTP, verifyAadhaarOTP, sendPasswordResetOTP, verifyPasswordResetOTPOnly, verifyPasswordResetOTP, generatePreRegisterEmailOTP, verifyPreRegisterEmailOTP, requestDeleteAccountOTP, confirmDeleteAccount } from "../controllers/otp.controller.js";
-import { verifyToken } from "../middlewares/auth.middleware.js";
+import { verifyToken } from "../middleware/auth.middleware.js";
 
 const router = express.Router();
 

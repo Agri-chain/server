@@ -1,8 +1,8 @@
 import express from "express";
 import multer from "multer";
 import { completeProfile, updateProfile, getProfile, verifyAadhaar, uploadAvatar, deleteAvatar } from "../controllers/profile.controller.js";
-import { verifyToken } from "../middlewares/auth.middleware.js";
-import { uploadAvatar as avatarUpload } from "../middlewares/multer.middleware.js";
+import { verifyToken } from "../middleware/auth.middleware.js";
+import { uploadAvatar as avatarUpload } from "../middleware/multer.middleware.js";
 import ApiError from "../utils/ApiError.js";
 
 const router = express.Router();

@@ -1,6 +1,6 @@
 import express from "express";
 import { registerUser, loginUser, googleAuth, adminLogin, refreshToken, logout, checkGoogleUserExists } from "../controllers/auth.controller.js";
-import { verifyToken } from "../middlewares/auth.middleware.js";
+import { verifyToken } from "../middleware/auth.middleware.js";
 import ApiResponse from "../utils/ApiResponse.js";
 
 const router = express.Router();

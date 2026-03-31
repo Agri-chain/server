@@ -1,6 +1,6 @@
 import express from "express";
-import { verifyToken, authorizeRoles } from "../middlewares/auth.middleware.js";
-import { restrictToVerified, restrictToRole } from "../middlewares/access.middleware.js";
+import { verifyToken, authorizeRoles } from "../middleware/auth.middleware.js";
+import { restrictToVerified, restrictToRole } from "../middleware/access.middleware.js";
 
 const router = express.Router();
 
