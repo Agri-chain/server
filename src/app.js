@@ -1,7 +1,12 @@
 import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
-import cookieParser from "cookie-parser";
+import cookieParser from 'cookie-parser';
+import morgan from 'morgan';
+import helmet from 'helmet';
+import mongoSanitize from 'express-mongo-sanitize';
+import { generalLimiter, authLimiter, otpLimiter, passwordResetLimiter, deleteAccountLimiter } from './middleware/rateLimiter.js';
+import { errorHandler } from './middleware/errorHandler.js';
 import { connectDB } from "./db/index.js";
 import authRoutes from "./routes/auth.routes.js";
 import otpRoutes from "./routes/otp.routes.js";
@@ -77,14 +82,42 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
-app.use(express.json({ limit: '32kb' }));
-app.use(express.urlencoded({ extended: true, limit: '32kb' }));
+// Security middleware
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+    },
+  },
+}));
+
+// Data sanitization
+app.use(mongoSanitize());
+
+// Body parsing middleware
+app.use(express.json({ limit: '10kb' })); // Reduced limit for security
+app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(cookieParser());
 
-// Routes
+// Rate limiting
+app.use('/api/v1', generalLimiter);
+
+// Routes with specific rate limiting
 console.log('Mounting auth routes...', typeof authRoutes);
-app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/auth", authLimiter, authRoutes);
 app.use("/api/v1/otp", otpRoutes);
+app.use("/api/v1/otp/email/send", otpLimiter); // Extra strict for OTP sending
+app.use("/api/v1/otp/password-reset/send", passwordResetLimiter);
+app.use("/api/v1/otp/delete-account/request", deleteAccountLimiter);
+app.use("/api/v1/otp/delete-account/confirm", deleteAccountLimiter);
 app.use("/api/v1/profile", profileRoutes);
 app.use("/api/v1/admin", adminRoutes);
 
@@ -100,19 +133,6 @@ app.use((req, res) => {
 });
 
 // Global error handler
-app.use((err, req, res, next) => {
-    console.error('Error:', err);
-    
-    if (err instanceof ApiError) {
-        return res.status(err.statusCode).json(err);
-    }
-
-    res.status(500).json({
-        statusCode: 500,
-        success: false,
-        message: err.message || "Internal server error",
-        timestamp: new Date().toISOString()
-    });
-});
+app.use(errorHandler);
 
 export default app;

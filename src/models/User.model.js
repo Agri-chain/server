@@ -128,6 +128,18 @@ const userSchema = new mongoose.Schema({
     pincode: {
         type: String,
         trim: true
+    },
+    deleteAccountOTP: {
+        type: String,
+        select: false
+    },
+    deleteAccountOTPExpires: {
+        type: Date,
+        select: false
+    },
+    deleteAccountRequestedAt: {
+        type: Date,
+        select: false
     }
 }, {
     timestamps: true

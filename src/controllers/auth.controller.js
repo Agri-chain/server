@@ -2,10 +2,12 @@ import User from "../models/User.model.js";
 import TempEmailVerification from "../models/TempEmailVerification.model.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import ApiError from "../utils/ApiError.js";
-import asyncHandler from "../utils/asyncHandler.js";
+import { asyncHandler } from '../middleware/errorHandler.js';
+import { validateUserRegistration, validateLogin, validateGoogleAuth, validateGoogleUserExists } from '../middleware/validator.js';
 import jwt from "jsonwebtoken";
 
-export const registerUser = asyncHandler(async (req, res) => {
+// Register user
+export const registerUser = [validateUserRegistration, asyncHandler(async (req, res) => {
     const { name, email, password, role } = req.body;
 
     if (!name || !email || !password || !role) {
@@ -74,9 +76,10 @@ export const registerUser = asyncHandler(async (req, res) => {
         accessToken,
         refreshToken
     }, "User registered successfully"));
-});
+})];
 
-export const loginUser = asyncHandler(async (req, res) => {
+// Login user
+export const loginUser = [validateLogin, asyncHandler(async (req, res) => {
     try {
         const { email, password } = req.body;
         console.log('🔑 Login attempt:', email);
@@ -89,7 +92,7 @@ export const loginUser = asyncHandler(async (req, res) => {
         console.log('👤 User found:', user ? 'YES' : 'NO');
         
         if (!user) {
-            throw new ApiError(401, "Invalid credentials");
+            throw new ApiError(404, "User doesn't exist with this email");
         }
 
         console.log('🔐 Checking password...');
@@ -97,7 +100,7 @@ export const loginUser = asyncHandler(async (req, res) => {
         console.log('🔐 Password valid:', isPasswordValid);
         
         if (!isPasswordValid) {
-            throw new ApiError(401, "Invalid credentials");
+            throw new ApiError(401, "Invalid password");
         }
 
         if (user.isBanned) {
@@ -140,18 +143,27 @@ export const loginUser = asyncHandler(async (req, res) => {
         console.error('Stack:', error.stack);
         throw error;
     }
-});
+})];
 
-export const checkGoogleUserExists = asyncHandler(async (req, res) => {
+// Check if Google user exists
+export const checkGoogleUserExists = [validateGoogleUserExists, asyncHandler(async (req, res) => {
+    console.log('🔥 checkGoogleUserExists endpoint HIT!');
     const { email, googleId } = req.query;
+    
+    console.log('🔍 checkGoogleUserExists called:', { email, googleId });
 
     if (!email || !googleId) {
         throw new ApiError(400, "Email and googleId are required");
     }
 
     try {
+        console.log('⏳ Checking User model...');
+        console.log('User model:', User ? 'Loaded' : 'Not loaded');
+        
+        console.log('⏳ Querying by googleId...');
         // Check if user exists with this googleId
         const userByGoogleId = await User.findOne({ googleId });
+        console.log('✅ Query by googleId complete:', userByGoogleId ? 'Found' : 'Not found');
         
         if (userByGoogleId) {
             return res.status(200).json(new ApiResponse(200, {
@@ -167,8 +179,10 @@ export const checkGoogleUserExists = asyncHandler(async (req, res) => {
             }, "Google user found"));
         }
 
+        console.log('⏳ Querying by email...');
         // Check if user exists with this email (but not googleId)
         const userByEmail = await User.findOne({ email, googleId: { $exists: false } });
+        console.log('✅ Query by email complete:', userByEmail ? 'Found' : 'Not found');
         
         if (userByEmail) {
             return res.status(200).json(new ApiResponse(200, {
@@ -185,6 +199,7 @@ export const checkGoogleUserExists = asyncHandler(async (req, res) => {
             }, "Email user found - can link Google"));
         }
 
+        console.log('✅ New Google user - not found in database');
         // New user
         return res.status(200).json(new ApiResponse(200, {
             exists: false,
@@ -194,9 +209,10 @@ export const checkGoogleUserExists = asyncHandler(async (req, res) => {
         console.error('❌ Error checking Google user:', error);
         throw error;
     }
-});
+})];
 
-export const googleAuth = asyncHandler(async (req, res) => {
+// Google OAuth
+export const googleAuth = [validateGoogleAuth, asyncHandler(async (req, res) => {
     console.log('🔥 Google Auth Request received');
     console.log('Request body:', req.body);
     
@@ -367,7 +383,7 @@ export const googleAuth = asyncHandler(async (req, res) => {
         console.error('❌ Error in Google auth:', error);
         throw error;
     }
-});
+})];
 
 export const adminLogin = asyncHandler(async (req, res) => {
     const { email, password } = req.body;

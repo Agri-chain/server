@@ -1,5 +1,5 @@
 import express from "express";
-import { generateEmailOTP, verifyEmailOTP, generateAadhaarOTP, verifyAadhaarOTP, sendPasswordResetOTP, verifyPasswordResetOTP, verifyPasswordResetOTPOnly, generatePreRegisterEmailOTP, verifyPreRegisterEmailOTP } from "../controllers/otp.controller.js";
+import { generateEmailOTP, verifyEmailOTP, generateAadhaarOTP, verifyAadhaarOTP, sendPasswordResetOTP, verifyPasswordResetOTPOnly, verifyPasswordResetOTP, generatePreRegisterEmailOTP, verifyPreRegisterEmailOTP, requestDeleteAccountOTP, confirmDeleteAccount } from "../controllers/otp.controller.js";
 import { verifyToken } from "../middlewares/auth.middleware.js";
 
 const router = express.Router();
@@ -20,5 +20,9 @@ router.post("/aadhaar/verify", verifyToken, verifyAadhaarOTP);
 router.post("/password-reset/send", sendPasswordResetOTP);
 router.post("/password-reset/verify-only", verifyPasswordResetOTPOnly);
 router.post("/password-reset/verify", verifyPasswordResetOTP);
+
+// Delete Account (with OTP verification)
+router.post("/delete-account/request", verifyToken, requestDeleteAccountOTP);
+router.post("/delete-account/confirm", verifyToken, confirmDeleteAccount);
 
 export default router;
