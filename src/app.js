@@ -12,7 +12,12 @@ import authRoutes from "./routes/auth.routes.js";
 import otpRoutes from "./routes/otp.routes.js";
 import profileRoutes from "./routes/profile.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
+<<<<<<< HEAD
 import blockchainRoutes from "./routes/blockchain.routes.js"; // NEW: Blockchain routes
+=======
+import walletRoutes from "./routes/wallet.routes.js";
+import paymentRoutes from "./routes/payment.routes.js";
+>>>>>>> 484101d4f84333d9bc2ff16fe851f6c8ab0b22ac
 import ApiError from "./utils/ApiError.js";
 
 // NEW: Initialize blockchain service
@@ -176,6 +181,8 @@ app.use("/api/v1/otp/delete-account/request", deleteAccountLimiter);
 app.use("/api/v1/otp/delete-account/confirm", deleteAccountLimiter);
 app.use("/api/v1/profile", profileRoutes);
 app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/wallet", walletRoutes);
+app.use("/api/v1/payment", paymentRoutes);
 
 // NEW: Blockchain routes (less strict rate limiting for testing)
 app.use("/api/v1/blockchain", generalLimiter, blockchainRoutes);
