@@ -8,7 +8,7 @@ IN both Client and server
 
 Dual authentication system with role-based access control following BACKEND_ANALYSIS.md architecture.
 
-## 📋 Features
+## 📋 Features-- 
 
 ### Authentication
 - **Dual Auth**: Google OAuth + Manual (email/password)
