@@ -2,7 +2,8 @@
 
 ## To run the project -
 npm i 
-npm run dev
+npm run dev 
+IN both Client and server 
 
 
 Dual authentication system with role-based access control following BACKEND_ANALYSIS.md architecture.
