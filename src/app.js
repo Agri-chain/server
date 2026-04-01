@@ -12,6 +12,8 @@ import authRoutes from "./routes/auth.routes.js";
 import otpRoutes from "./routes/otp.routes.js";
 import profileRoutes from "./routes/profile.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
+import walletRoutes from "./routes/wallet.routes.js";
+import paymentRoutes from "./routes/payment.routes.js";
 import ApiError from "./utils/ApiError.js";
 
 dotenv.config();
@@ -120,6 +122,8 @@ app.use("/api/v1/otp/delete-account/request", deleteAccountLimiter);
 app.use("/api/v1/otp/delete-account/confirm", deleteAccountLimiter);
 app.use("/api/v1/profile", profileRoutes);
 app.use("/api/v1/admin", adminRoutes);
+app.use("/api/v1/wallet", walletRoutes);
+app.use("/api/v1/payment", paymentRoutes);
 
 console.log('All routes mounted successfully');
 
