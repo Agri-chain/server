@@ -1,5 +1,10 @@
 # Dual Authentication Backend
 
+## To run the project -
+npm i 
+npm run dev
+
+
 Dual authentication system with role-based access control following BACKEND_ANALYSIS.md architecture.
 
 ## 📋 Features
