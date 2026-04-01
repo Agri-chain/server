@@ -12,7 +12,11 @@ import authRoutes from "./routes/auth.routes.js";
 import otpRoutes from "./routes/otp.routes.js";
 import profileRoutes from "./routes/profile.routes.js";
 import adminRoutes from "./routes/admin.routes.js";
+import blockchainRoutes from "./routes/blockchain.routes.js"; // NEW: Blockchain routes
 import ApiError from "./utils/ApiError.js";
+
+// NEW: Initialize blockchain service
+import blockchainService from './services/blockchain.service.js';
 
 dotenv.config();
 
@@ -24,6 +28,7 @@ app.get('/health', (req, res) => {
         status: 'ok', 
         env: process.env.NODE_ENV,
         mongo: process.env.MONGODB_URI ? 'configured' : 'missing',
+        blockchain: blockchainService.escrowContract ? 'connected' : 'disconnected',
         timestamp: new Date().toISOString() 
     });
 });
@@ -31,6 +36,40 @@ app.get('/health', (req, res) => {
 // Simple test endpoint - no DB
 app.get('/api/test', (req, res) => {
     res.json({ message: 'API is working', time: new Date().toISOString() });
+});
+
+// NEW: Blockchain test endpoints (no auth required for testing)
+app.get('/api/v1/blockchain/test', async (req, res) => {
+    try {
+        const balance = await blockchainService.getBalance(blockchainService.escrowContract?.address || 'N/A');
+        res.json({ 
+            message: 'Blockchain service working ✅', 
+            wallet: blockchainService.escrowContract?.signer.address,
+            balance: `${balance} ETH`,
+            time: new Date().toISOString()
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            message: 'Blockchain test failed', 
+            error: error.message 
+        });
+    }
+});
+
+app.get('/api/v1/blockchain/status', async (req, res) => {
+    try {
+        const balance = await blockchainService.getBalance(blockchainService.escrowContract?.signer.address);
+        const tradeCount = await blockchainService.getTradeCount();
+        res.json({
+            connected: !!blockchainService.escrowContract,
+            wallet: blockchainService.escrowContract?.signer.address,
+            balance: `${balance} ETH`,
+            totalTrades: tradeCount,
+            network: 'Hardhat Localhost (127.0.0.1:8545)'
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 // Test auth endpoint - no DB
@@ -53,6 +92,20 @@ if (process.env.MONGODB_URI) {
         console.error('DB error:', err.message);
     });
 }
+
+// NEW: Test blockchain connection on startup
+(async () => {
+    try {
+        if (blockchainService.escrowContract) {
+            console.log('✅ Blockchain connected:', blockchainService.escrowContract.signer.address);
+            console.log('🌐 Hardhat node status: OK');
+        } else {
+            console.warn('⚠️  Blockchain not connected - run `npx hardhat node` and deploy contracts');
+        }
+    } catch (error) {
+        console.error('❌ Blockchain init failed:', error.message);
+    }
+})();
 
 // CORS configuration
 const allowedOrigins = [
@@ -90,7 +143,7 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'"],
       scriptSrc: ["'self'"],
       imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'"],
+      connectSrc: ["'self'", "http://127.0.0.1:8545"], // NEW: Allow Hardhat localhost
       fontSrc: ["'self'"],
       objectSrc: ["'none'"],
       mediaSrc: ["'self'"],
@@ -103,9 +156,12 @@ app.use(helmet({
 app.use(mongoSanitize());
 
 // Body parsing middleware
-app.use(express.json({ limit: '10kb' })); // Reduced limit for security
-app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+app.use(express.json({ limit: '50kb' })); // Increased for blockchain tx data
+app.use(express.urlencoded({ extended: true, limit: '50kb' }));
 app.use(cookieParser());
+
+// Logging (optional - uncomment if needed)
+// app.use(morgan('combined'));
 
 // Rate limiting
 app.use('/api/v1', generalLimiter);
@@ -114,14 +170,18 @@ app.use('/api/v1', generalLimiter);
 console.log('Mounting auth routes...', typeof authRoutes);
 app.use("/api/v1/auth", authLimiter, authRoutes);
 app.use("/api/v1/otp", otpRoutes);
-app.use("/api/v1/otp/email/send", otpLimiter); // Extra strict for OTP sending
+app.use("/api/v1/otp/email/send", otpLimiter);
 app.use("/api/v1/otp/password-reset/send", passwordResetLimiter);
 app.use("/api/v1/otp/delete-account/request", deleteAccountLimiter);
 app.use("/api/v1/otp/delete-account/confirm", deleteAccountLimiter);
 app.use("/api/v1/profile", profileRoutes);
 app.use("/api/v1/admin", adminRoutes);
 
-console.log('All routes mounted successfully');
+// NEW: Blockchain routes (less strict rate limiting for testing)
+app.use("/api/v1/blockchain", generalLimiter, blockchainRoutes);
+
+console.log('✅ All routes mounted successfully');
+console.log('🚀 Blockchain endpoints ready: /api/v1/blockchain/test, /api/v1/blockchain/status');
 
 // 404 handler
 app.use((req, res) => {
